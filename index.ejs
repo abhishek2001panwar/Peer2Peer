@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chatbot Application</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background-color: #f4f4f9;
+        height: 100vh;
+      }
+      .chat-container {
+        width: 100%;
+        max-width: 500px;
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        height: 90vh;
+      }
+      .header {
+        background: #007bff;
+        color: #fff;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .header h2 {
+        margin: 0;
+        font-size: 1.2rem;
+      }
+      .messages {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+      }
+      .message {
+        background: #e0e0e0;
+        border-radius: 15px;
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        max-width: 75%;
+        align-self: flex-start;
+        font-size: 0.9rem;
+        color: #333;
+      }
+      .message.user {
+        background: #007bff;
+        color: #fff;
+        align-self: flex-end;
+      }
+      .input-container {
+        display: flex;
+        padding: 10px;
+        border-top: 1px solid #e0e0e0;
+        background: #fff;
+      }
+      .input {
+        flex: 1;
+        padding: 10px;
+        font-size: 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 5px;
+        margin-right: 10px;
+      }
+      #sendButton {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+      .colour {
+        background-color: blue;
+      }
+      .message {
+        background: #e0e0e0;
+        border-radius: 15px;
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        max-width: 75%;
+        align-self: flex-start;
+        font-size: 0.9rem;
+        color: #333;
+      }
+      /* Style for the user's own message */
+      .message.user {
+        background: #007bff;
+        color: #fff;
+        align-self: flex-end;
+      }
+      #userId {
+        font-weight: bold;
+        font-size: 0.4rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="chat-container">
+      <div class="header">
+        <h2>
+          User ID: <span style="color: #fff" id="userId">Loading...</span>
+        </h2>
+      </div>
+      <div class="messages" id="messageContainer">
+        <!-- Messages will be appended here -->
+      </div>
+      <p class="typing"></p>
+      <div class="input-container">
+        <input
+          type="text"
+          class="input"
+          id="messageInput"
+          placeholder="Type a message..."
+        />
+        <button id="sendButton">Send</button>
+      </div>
+    </div>
+
+    <script
+      src="https://cdn.socket.io/4.8.0/socket.io.min.js"
+      integrity="sha384-OoIbkvzsFFQAG88r+IqMAjyOtYDPGO0cqK5HF5Uosdy/zUEGySeAzytENMDynREd"
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      const socket = io();
+      const messageContainer = document.getElementById("messageContainer");
+      const userIdDisplay = document.getElementById("userId");
+      const input = document.getElementById("messageInput");
+      const sendButton = document.getElementById("sendButton");
+      var typingIndicator = document.querySelector(".typing");
+      var socketId;
+
+      // Set user ID initially (replace with actual ID fetching logic if needed)
+      userIdDisplay.textContent = socketId; // example user ID
+
+      sendButton.addEventListener("click", () => {
+        const message = input.value;
+        if (message.trim()) {
+          socket.emit("message", message); // Emit the message to the server
+          input.value = "";
+        }
+        typingIndicator.textContent = ""; // Clear typing indicator
+      });
+
+      // Listen for incoming messages from the server and display them
+      socket.on("message", (data) => {
+        addMessage(data.message, data.id);
+      });
+
+      input.addEventListener("input", () => {
+        socket.emit("typing");
+      });
+
+      input.addEventListener("input", () => {
+        if (input.value.trim()) {
+          socket.emit("typing", { id: userIdDisplay.textContent });
+        } else {
+          socket.emit("typing", { id: " " }); // Emit empty if input is cleared
+        }
+      });
+
+      // Display "is typing..." when someone is typing
+      socket.on("typing", (data) => {
+        if (data.id) {
+          typingIndicator.textContent = `${data.id} is typing...`;
+        } else {
+          typingIndicator.textContent = " "; // Clear if typing is empty
+        }
+      });
+
+      // Function to add messages to the message container
+      function addMessage(text, sender) {
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("message");
+        if (sender === "user") {
+          messageDiv.classList.add("user");
+        } else {
+          messageDiv.classList.add("message");
+        }
+        messageDiv.textContent = `${text}, ${sender}`;
+        messageContainer.appendChild(messageDiv);
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+      }
+    </script>
+  </body>
+</html>
