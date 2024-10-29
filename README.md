@@ -24,7 +24,7 @@ To get started with the app, follow these steps:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/abhishek2001panwar/Peer2Peer
+   git clone git@github.com:abhishek2001panwar/Peer2Peer.git
    ```
    
 2. **Navigate to the project directory**:
